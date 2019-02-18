@@ -1,0 +1,165 @@
+
+
+<meta http-equiv="Context-Type" content="text/html; charset=US-ASCII">
+<!DOCTYPE html>
+<html>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<head>
+<title>CS8 W18 Grades</title>
+</head>
+<style>
+.header {
+	margin: auto;
+	text-align: center;
+}
+
+body {
+	background: #eee;
+}
+
+.form-control-inline {
+	width: auto;
+	display: inline;
+}
+
+.table-striped {
+	margin: auto;
+	width: auto;
+    text-align: left;
+}
+
+.contact {
+	text-align: center;
+}
+</style>
+<body>
+
+<div class="header">
+<h1>CS8 W18 Grades</h1><br/>
+<h4>Please enter your perm# here: <br/><input class="form-control form-control-inline" type="text" id="perm"></h4>
+<button class="btn btn-primary" onclick="displayGrade()">Show my grade</button>
+<button class="btn btn-secondary" onclick="onClear()">Clear</button>
+</div>
+<br/>
+
+<div class="grades">
+<table class="table table-striped" id="gradeTable">
+</table>
+<br>
+</div>
+
+<div class="contact">
+	<footer>Contact <a href="mailto:shiyu@ucsb.edu">Shiyu Ji</a> if you find any question.</footer>
+</div>
+
+<script>
+
+document.getElementById("perm")
+    .addEventListener("keyup", function(event) {
+    event.preventDefault();
+    if (event.keyCode == 13) {
+		displayGrade();
+    }
+});
+
+function displayGrade() {
+	var perm = document.getElementById("perm");
+	var gradeTable = document.getElementById("gradeTable");
+	var permNo = perm.value;
+	if (permNo[0] == 'X') permNo = permNo.substring(1);
+	var id = permNo % 98773;
+	var missedLabs = [];
+
+	$.ajax("cs8w18grades.json", {cache:false});
+	$.getJSON("cs8w18grades.json", function(data){
+		for (var i = 0; i<data.length; i++) {
+			var item = data[i];
+			if (item.code == id) {
+				$("#gradeTable").css("display", "none");
+				var rows = "<thead>Your Grades:</thead><tbody class=\"gradeTable\">";
+				for (var key in item){
+					if (key == "code") continue;
+					if (key.indexOf("Attendance") >= 0) {
+						if (item[key] == 0)
+							missedLabs.push(key.substring(0,key.indexOf("Attendance")));
+						continue;
+					}
+					rows += "<tr><td>" + key + " (out of ";
+					switch(key) {
+						case "hw1":
+						case "hw2": 
+						case "hw3": 
+						case "hw4": 
+						case "hw5": 
+						case "hw6": 
+						case "hw7": 
+						case "hw8": 
+						case "hw9": 
+							rows += 40; break;
+						case "lab0":
+						case "hw0":
+						case "lab1":
+							rows += 50; break;
+						case "lab2":
+						case "lab3": 
+						case "lab4":
+						case "lab5":
+						case "lab6":
+						case "lab7":
+						case "lab8":
+						case "lab9":
+						case "midterm1": 
+						case "midterm2":
+						case "proj1":
+						case "proj2":
+                                                case "final":
+                                                        rows += 100; break;
+						default:
+					}
+					rows += ")</td><td>" + item[key] + "</td></tr>"; 
+				}
+				rows += "</tbody>";
+				
+				rows += "<div class = \"contact\">";
+				rows += "<br /><b>Attendance: </b>";
+				if (missedLabs.length){
+					rows += "<p>We do not have your sign-in record for:</p>";
+					for (var i = 0; i < missedLabs.length; i++){
+						rows += "<ul>" + missedLabs[i] + "</ul>";
+					}
+				}else{
+					rows += "<p>You have attended all the labs.</p>";
+				}
+				rows += "</div>";
+				gradeTable.innerHTML = rows;
+				$("#gradeTable").fadeIn(1000);
+				return;
+			}
+		};
+		alert("No record found. Check your perm number.");
+	});
+}
+
+function onClear() {
+	$("#gradeTable").css("display", "none");
+	var perm = document.getElementById("perm");
+	var gradeTable = document.getElementById("gradeTable");
+	perm.value = "";
+	gradeTable.innerHTML = "";
+}
+
+</script>
+
+
+</body>
+</html>
+
+<html><head></head><body></body></html>
+
